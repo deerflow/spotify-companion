@@ -25,6 +25,7 @@ app.get('/callback/code', async (req, res) => {
     console.log({ webClient });
     await webClient.getCurrentUserProfile();
     res.json({ message: 'Successfully logged in' });
+    await webClient.updateUserInDb();
 });
 
 export default app;

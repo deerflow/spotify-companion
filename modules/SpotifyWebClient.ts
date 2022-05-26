@@ -1,9 +1,12 @@
 import axios, { AxiosInstance } from 'axios';
+import { mongoClient, Users } from './DB';
 
 class SpotifyWebClient {
     private readonly _code: string;
     private _refreshToken?: string;
     private _accessToken?: string;
+    private _email?: string;
+    private _id?: string;
     private _axios: AxiosInstance = axios.create();
 
     get code() {
@@ -17,6 +20,12 @@ class SpotifyWebClient {
     }
     get axios() {
         return this._axios;
+    }
+    get email() {
+        return this._email;
+    }
+    get id() {
+        return this._id;
     }
 
     constructor({ code, refreshToken, accessToken }: { code: string; refreshToken?: string; accessToken?: string }) {
@@ -81,9 +90,18 @@ class SpotifyWebClient {
         });
     }
 
+    async updateUserInDb() {
+        await mongoClient.connect();
+        const { id, email, code, refreshToken, accessToken } = this;
+        await Users.updateOne({ _id: id }, { $set: { id, email, code, refreshToken, accessToken } }, { upsert: true });
+        await mongoClient.close();
+    }
+
     async getCurrentUserProfile() {
         const res = await this.axios.get('/me');
-        console.log(res.data);
+        const { email, id } = res.data;
+        this._email = email;
+        this._id = id;
     }
 
     async getCurrentUserPlaylists({ limit, offset } = { limit: 20, offset: 0 }) {
