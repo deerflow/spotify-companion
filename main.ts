@@ -1,4 +1,7 @@
 require('dotenv').config();
-import SpotifyWebApi from './modules/SpotifyWebApi';
+import { createServer } from 'http';
+import app from './app';
 
-SpotifyWebApi.instance.authenticate();
+createServer(app).listen(process.env.PORT, () =>
+    console.log(`Server listening on http://localhost:${process.env.PORT}`)
+);
