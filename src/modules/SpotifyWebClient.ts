@@ -90,7 +90,10 @@ class SpotifyWebClient {
             data: new URLSearchParams({
                 grant_type: 'authorization_code',
                 code: this.code,
-                redirect_uri: `http://localhost:${process.env.PORT}/callback/code`,
+                redirect_uri:
+                    process.env.NODE_ENV === 'production'
+                        ? `${process.env.HOST_PROD}/callback/code`
+                        : `http://localhost:${process.env.PORT}/callback/code`,
             }),
         });
         const { access_token, refresh_token } = res.data;

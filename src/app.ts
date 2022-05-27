@@ -12,7 +12,10 @@ app.get('/users/login', (req, res) => {
             response_type: 'code',
             client_id: process.env.SPOTIFY_CLIENT_ID,
             scope: SCOPE,
-            redirect_uri: `http://localhost:${process.env.PORT}/callback/code`,
+            redirect_uri:
+                process.env.NODE_ENV === 'production'
+                    ? `${process.env.HOST_PROD}/callback/code`
+                    : `http://localhost:${process.env.PORT}/callback/code`,
         })}`
     );
 });
