@@ -1,0 +1,9 @@
+.idea
+.vscode
+.gitignore
+.prettierrc
+Dockerfile
+docker-compose.yml
+node_modules
+dist
+
