@@ -2,6 +2,7 @@ import express from 'express';
 import queryString from 'node:querystring';
 import SpotifyWebClient from './modules/SpotifyWebClient';
 import { MongoClient } from 'mongodb';
+import Logger from './modules/Logger';
 
 const app = express();
 const SCOPE = 'playlist-read-private playlist-modify-private user-read-email user-read-private';
@@ -26,7 +27,7 @@ app.get('/callback/code', async (req, res) => {
     }
     const webClient = new SpotifyWebClient({ code: req.query.code as string });
     await webClient.authenticate();
-    console.log({ webClient });
+    Logger.info({ webClient });
     await webClient.getCurrentUserProfile();
     res.json({ message: 'Successfully logged in' });
     const dbClient = new MongoClient(

@@ -3,6 +3,7 @@
 import { mongoClient, Playlists, Users } from './modules/DB';
 import SpotifyWebClient from './modules/SpotifyWebClient';
 import { AxiosError } from 'axios';
+import Logger from './modules/Logger';
 
 const cron = async () => {
     try {
@@ -30,11 +31,11 @@ const cron = async () => {
                     return client;
                 } catch (e) {
                     if ((e as AxiosError)?.response?.status === 401) {
-                        console.log(`Refreshing ${client.email}`);
+                        Logger.info(`Refreshing ${client.email}`);
                         await client.authenticate(true);
                         client.refreshAxiosInstance();
                         await client.updateUserInDb();
-                        console.log('Finished refreshing');
+                        Logger.info('Finished refreshing');
                         return client;
                     }
                 }
@@ -44,7 +45,12 @@ const cron = async () => {
         for (const client of webClients) {
             const playlists = await client.getCurrentUserPlaylists();
             for (const playlist of playlists) {
-                if (playlist.name === playlistName) continue;
+                if (playlist.name === playlistName) {
+                    if (process.env.NO_DUPLICATES_IN_TEMPORTAL_PLAYLIST === 'true') {
+                        client.removeDuplicateTracksInPlaylist(playlist.id);
+                    }
+                    continue;
+                }
                 const dbPlaylist = await Playlists.findOne({ _id: playlist.id });
                 // Playlist does not exist in DB
                 if (!dbPlaylist) {
@@ -63,7 +69,7 @@ const cron = async () => {
                     const difference = latestTracks.filter(track => !dbPlaylist.tracks.includes(track));
                     const temporalPlaylist = playlists.find(playlist => playlist.name === playlistName);
                     if (difference.length > 0) {
-                        console.log({ difference, playlist: playlist.name });
+                        Logger.info({ difference, playlist: playlist.name });
                         // Temporal playlist already exists
                         if (temporalPlaylist) {
                             await client.addTracksToPlaylist({ playlistId: temporalPlaylist.id, tracks: difference });
@@ -87,6 +93,9 @@ const cron = async () => {
                             },
                         }
                     );
+                }
+                if (process.env.NO_DUPLICATES_IN_PLAYLISTS === 'true') {
+                    client.removeDuplicateTracksInPlaylistAndDbPlaylist(playlist.id);
                 }
             }
         }

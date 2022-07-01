@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import { mongoClient } from './DB';
+import { mongoClient, Playlists } from './DB';
 import { GetCurrentUserPlaylist, Playlist } from '../types/requests/GetCurrentUserPlaylist';
 import { GetPlaylist } from '../types/requests/GetPlaylist';
 import { CreatePlaylist } from '../types/requests/CreatePlaylist';
@@ -170,6 +170,15 @@ class SpotifyWebClient {
         return res.data;
     }
 
+    async removeTracksFromPlaylist({ playlistId, tracks }: { playlistId: string; tracks: string[] }) {
+        const res = await this.axios.delete<{ snapshot_id: string }>(`/playlists/${playlistId}/tracks`, {
+            data: {
+                tracks: tracks.map(track => ({ uri: track })),
+            },
+        });
+        return res.data.snapshot_id;
+    }
+
     async createPlaylist({
         name,
         isPublic = false,
@@ -188,6 +197,32 @@ class SpotifyWebClient {
             description,
         });
         return res.data;
+    }
+
+    async removeDuplicateTracksInPlaylist(playlistId: string) {
+        const playlist = await this.getPlaylist(playlistId);
+        if (!playlist) {
+            throw new Error(
+                'Exception while calling SpotifyWebClient.removeDuplicateTracksInPlaylist : Playlist not found'
+            );
+        }
+        const playlistTracksDuplicates = playlist.tracks.filter(
+            (track, index) => playlist.tracks.indexOf(track) !== index
+        );
+        await this.removeTracksFromPlaylist({ playlistId, tracks: playlistTracksDuplicates });
+        return this.addTracksToPlaylist({ playlistId, tracks: [...new Set(playlistTracksDuplicates)] });
+    }
+
+    async removeDuplicateTracksInPlaylistAndDbPlaylist(playlistId: string) {
+        const snapshotId = await this.removeDuplicateTracksInPlaylist(playlistId);
+        const dbPlaylist = await Playlists.findOne({ _id: playlistId });
+        if (!dbPlaylist) {
+            throw new Error(
+                'Exception while calling SpotifyWebClient.removeDuplicateTracksInPlaylistAndDbPlaylist : DbPlaylist not found'
+            );
+        }
+        const newDbPlaylistTracks = [...new Set(dbPlaylist?.tracks)];
+        await Playlists.updateOne({ _id: playlistId }, { $set: { tracks: newDbPlaylistTracks, snapshotId } });
     }
 }
 
