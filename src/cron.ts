@@ -46,7 +46,7 @@ const cron = async () => {
             const playlists = await client.getCurrentUserPlaylists();
             for (const playlist of playlists) {
                 if (playlist.name === playlistName) {
-                    if (process.env.NO_DUPLICATES_IN_TEMPORTAL_PLAYLIST === 'true') {
+                    if (process.env.NO_DUPLICATES_IN_TEMPORAL_PLAYLIST === 'true') {
                         client.removeDuplicateTracksInPlaylist(playlist.id);
                     }
                     continue;
