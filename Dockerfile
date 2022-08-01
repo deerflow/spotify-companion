@@ -7,4 +7,5 @@ COPY tsconfig.json .
 RUN npm ci
 RUN npm run build
 EXPOSE 4000
+ENV NODE_ENV = 'production'
 CMD npm run start:prod
