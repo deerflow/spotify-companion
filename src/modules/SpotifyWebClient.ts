@@ -1,10 +1,11 @@
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosError, AxiosInstance } from 'axios';
 import { mongoClient, Playlists } from './DB';
 import { GetCurrentUserPlaylist, Playlist } from '../types/requests/GetCurrentUserPlaylist';
 import { GetPlaylist } from '../types/requests/GetPlaylist';
 import { CreatePlaylist } from '../types/requests/CreatePlaylist';
 import { GetPlaylistItems } from '../types/requests/GetPlaylistItems';
 import User from '../types/models/User';
+import SpotifyApi from './SpotifyApi';
 
 class SpotifyWebClient {
     private readonly _code: string;
@@ -52,6 +53,17 @@ class SpotifyWebClient {
         this._id = id;
         this._email = email;
         this.refreshAxiosInstance();
+        this.axios.interceptors.response.use(
+            res => res,
+            (err: AxiosError) => {
+                // Too many requests
+                if (err.response?.status === 429) {
+                    SpotifyApi.instance.retryAfter = parseInt(err.response.headers['retry-after']);
+                    return err.response;
+                }
+                return Promise.reject(err);
+            }
+        );
     }
 
     async authenticate(removeAccessToken = false) {

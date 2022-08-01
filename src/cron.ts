@@ -4,8 +4,16 @@ import { mongoClient, Playlists, Users } from './modules/DB';
 import SpotifyWebClient from './modules/SpotifyWebClient';
 import { AxiosError } from 'axios';
 import Logger from './modules/Logger';
+import { handleException } from './modules/Exceptions';
+import SpotifyApi from './modules/SpotifyApi';
 
 const cron = async () => {
+    if (SpotifyApi.instance.retryAfter > 60) {
+        SpotifyApi.instance.retryAfter -= 60;
+        return console.log({ rateLimited: true, retryAfter: SpotifyApi.instance.retryAfter });
+    } else if (SpotifyApi.instance.retryAfter !== 0) {
+        SpotifyApi.instance.retryAfter = 0;
+    }
     try {
         console.log(
             `${new Date().toLocaleDateString('fr-FR', {
@@ -99,6 +107,8 @@ const cron = async () => {
                 }
             }
         }
+    } catch (e) {
+        handleException(e as unknown as Error);
     } finally {
         await mongoClient.close();
     }
