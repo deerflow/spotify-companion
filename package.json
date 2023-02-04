@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon --exec ts-node src/main.ts --ext ts,json,env",
     "build": "tsc",
-    "start:prod": "node dist/main.js"
+    "start:prod": "node dist/main.js",
+    "start:docker": "docker rm $(docker stop $(docker ps -a -q --filter ancestor=\"spotify-companion_app\" --format=\"{{.ID}}\")); docker rmi $(docker images | grep 'spotify-companion_app'); docker compose up"
   },
   "keywords": [],
   "author": "",
