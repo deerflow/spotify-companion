@@ -29,6 +29,7 @@ const cron = async () => {
         const playlistName = local[0].toUpperCase() + local.slice(1);
 
         const users = await Users.find({}).toArray();
+
         const webClients = users.map(user => new SpotifyWebClient(user));
 
         // Refresh tokens of every user that gets a 401 status code
@@ -101,9 +102,6 @@ const cron = async () => {
                             },
                         }
                     );
-                }
-                if (process.env.NO_DUPLICATES_IN_PLAYLISTS === 'true') {
-                    client.removeDuplicateTracksInPlaylistAndDbPlaylist(playlist.id);
                 }
             }
         }

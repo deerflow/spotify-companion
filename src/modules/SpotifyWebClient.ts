@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
-import { mongoClient, Playlists } from './DB';
+import { mongoClient } from './DB';
 import { GetCurrentUserPlaylist, Playlist } from '../types/requests/GetCurrentUserPlaylist';
 import { GetPlaylist } from '../types/requests/GetPlaylist';
 import { CreatePlaylist } from '../types/requests/CreatePlaylist';
@@ -221,20 +221,11 @@ class SpotifyWebClient {
         const playlistTracksDuplicates = playlist.tracks.filter(
             (track, index) => playlist.tracks.indexOf(track) !== index
         );
-        await this.removeTracksFromPlaylist({ playlistId, tracks: playlistTracksDuplicates });
-        return this.addTracksToPlaylist({ playlistId, tracks: [...new Set(playlistTracksDuplicates)] });
-    }
 
-    async removeDuplicateTracksInPlaylistAndDbPlaylist(playlistId: string) {
-        const snapshotId = await this.removeDuplicateTracksInPlaylist(playlistId);
-        const dbPlaylist = await Playlists.findOne({ _id: playlistId });
-        if (!dbPlaylist) {
-            throw new Error(
-                'Exception while calling SpotifyWebClient.removeDuplicateTracksInPlaylistAndDbPlaylist : DbPlaylist not found'
-            );
+        if (playlistTracksDuplicates.length !== 0) {
+            await this.removeTracksFromPlaylist({ playlistId, tracks: playlistTracksDuplicates });
+            return this.addTracksToPlaylist({ playlistId, tracks: [...new Set(playlistTracksDuplicates)] });
         }
-        const newDbPlaylistTracks = [...new Set(dbPlaylist?.tracks)];
-        await Playlists.updateOne({ _id: playlistId }, { $set: { tracks: newDbPlaylistTracks, snapshotId } });
     }
 }
 
