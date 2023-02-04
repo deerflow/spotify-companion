@@ -30,6 +30,10 @@ const cron = async () => {
 
         const users = await Users.find({}).toArray();
 
+        if (users.length === 0) {
+            console.log('Found no user, exiting cron');
+        }
+
         const webClients = users.map(user => new SpotifyWebClient(user));
 
         // Refresh tokens of every user that gets a 401 status code
@@ -40,11 +44,11 @@ const cron = async () => {
                     return client;
                 } catch (e) {
                     if ((e as AxiosError)?.response?.status === 401) {
-                        Logger.info(`Refreshing ${client.email}`);
+                        console.log(`Refreshing ${client.email}`);
                         await client.authenticate(true);
                         client.refreshAxiosInstance();
                         await client.updateUserInDb();
-                        Logger.info('Finished refreshing');
+                        console.log('Finished refreshing');
                         return client;
                     }
                 }
@@ -90,18 +94,19 @@ const cron = async () => {
                             });
                             await client.addTracksToPlaylist({ playlistId: newPlaylist.id, tracks: difference });
                         }
+                        console.log({ playlist: dbPlaylist.name, tracksToAdd: difference });
+                        await Playlists.updateOne(
+                            { _id: playlist.id },
+                            {
+                                $set: {
+                                    tracks: latestTracks,
+                                    name: playlist.name,
+                                    userId: playlist.owner.id,
+                                    snapshotId: playlist.snapshot_id,
+                                },
+                            }
+                        );
                     }
-                    await Playlists.updateOne(
-                        { _id: playlist.id },
-                        {
-                            $set: {
-                                tracks: latestTracks,
-                                name: playlist.name,
-                                userId: playlist.owner.id,
-                                snapshotId: playlist.snapshot_id,
-                            },
-                        }
-                    );
                 }
             }
         }
