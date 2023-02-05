@@ -13,6 +13,12 @@ class SpotifyWebClient {
     private _accessToken?: string;
     private _email?: string;
     private _id?: string;
+
+    private _removeDuplicatesInRewindPlaylists?: boolean;
+
+    private _language?: 'en-US' | 'fr-FR';
+
+    private _spotifyId?: string;
     private _axios: AxiosInstance = axios.create();
 
     get code() {
@@ -33,25 +39,45 @@ class SpotifyWebClient {
     get id() {
         return this._id;
     }
+    get spotifyId() {
+        return this._spotifyId;
+    }
+
+    get removeDuplicatesInRewindPlaylists() {
+        return this._removeDuplicatesInRewindPlaylists;
+    }
+
+    get language() {
+        return this._language;
+    }
 
     constructor({
         code,
         refreshToken,
         accessToken,
         id,
+        spotifyId,
         email,
+        removeDuplicatesInRewindPlaylists = true,
+        language = 'en-US',
     }: {
         code: string;
         refreshToken?: string;
         accessToken?: string;
-        id?: string;
         email?: string;
+        id?: string;
+        spotifyId?: string;
+        removeDuplicatesInRewindPlaylists?: boolean;
+        language?: 'en-US' | 'fr-FR';
     }) {
         this._code = code;
         this._refreshToken = refreshToken;
         this._accessToken = accessToken;
         this._id = id;
+        this._spotifyId = spotifyId;
         this._email = email;
+        this._removeDuplicatesInRewindPlaylists = removeDuplicatesInRewindPlaylists;
+        this._language = language;
         this.refreshAxiosInstance();
         this.axios.interceptors.response.use(
             res => res,
