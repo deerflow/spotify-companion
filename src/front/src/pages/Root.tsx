@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 const Root: FC = () => {
     return (
-        <>
+        <div className='page-center'>
             <div className='title-container'>
                 <h1 className='main-title'>Spotify Rewind</h1>
                 <RewindIon />
@@ -15,7 +15,7 @@ const Root: FC = () => {
                     Log in with Spotify
                 </Link>
             </div>
-        </>
+        </div>
     );
 };
 
