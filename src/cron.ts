@@ -25,8 +25,6 @@ const cron = async () => {
             })} : Starting cron job`
         );
         await mongoClient.connect();
-        const local = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-        const playlistName = local[0].toUpperCase() + local.slice(1);
 
         const users = await Users.find({}).toArray();
 
@@ -57,9 +55,11 @@ const cron = async () => {
 
         for (const client of webClients) {
             const playlists = await client.getCurrentUserPlaylists();
+            const local = new Date().toLocaleDateString(client.language, { month: 'long', year: 'numeric' });
+            const playlistName = local[0].toUpperCase() + local.slice(1);
             for (const playlist of playlists) {
                 if (playlist.name === playlistName) {
-                    if (process.env.NO_DUPLICATES_IN_TEMPORAL_PLAYLIST === 'true') {
+                    if (client.removeDuplicatesInRewindPlaylists) {
                         client.removeDuplicateTracksInPlaylist(playlist.id);
                     }
                     continue;
