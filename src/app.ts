@@ -13,7 +13,7 @@ console.log(path.join(__dirname, 'front/dist/assets'), express.static('front/dis
 
 app.use('/assets', express.static(path.join(__dirname, 'front/dist/assets')));
 
-app.get('/', (req, res) => {
+app.get(['/', '/profile'], (req, res) => {
     res.sendFile(path.join(__dirname, '/front/dist/index.html'));
 });
 app.get('/users/login', (req, res) => {
@@ -50,15 +50,26 @@ app.get('/callback/code', async (req, res) => {
     }
 });
 
-app.get('/profile', async (req, res) => {
+app.get('/data/profile', async (req, res) => {
     if (!req.query.token) {
-        return res.redirect('/users/login');
+        return res.status(400).json({ error: 'No token provided' });
     }
     const user = await Users.find({ _id: req.query.token });
     if (!user) {
-        return res.redirect('/users/login');
+        return res.status(400).json({ error: 'Invalid token' });
     }
     return user;
+});
+
+app.delete('/stop', async (req, res) => {
+    if (!req.query.token) {
+        return res.status(400).json({ error: 'No token provided' });
+    }
+    const { deletedCount } = await Users.deleteOne({ _id: req.query.token });
+    if (!deletedCount) {
+        return res.status(400).json({ error: 'Invalid token' });
+    }
+    return res.status(200).json({ msg: 'Account deleted' });
 });
 
 export default app;
