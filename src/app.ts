@@ -3,10 +3,19 @@ import queryString from 'node:querystring';
 import SpotifyWebClient from './modules/SpotifyWebClient';
 import { MongoClient } from 'mongodb';
 import Logger from './modules/Logger';
+import path from 'path';
+import { Users } from './modules/DB';
 
 const app = express();
 const SCOPE = 'playlist-read-private playlist-modify-private user-read-email user-read-private';
 
+console.log(path.join(__dirname, 'front/dist/assets'), express.static('front/dist/assets'));
+
+app.use('/assets', express.static(path.join(__dirname, 'front/dist/assets')));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '/front/dist/index.html'));
+});
 app.get('/users/login', (req, res) => {
     return res.redirect(
         `${process.env.SPOTIFY_ACCOUNTS_URI}/authorize?${queryString.stringify({
@@ -39,6 +48,17 @@ app.get('/callback/code', async (req, res) => {
     } finally {
         await dbClient.close();
     }
+});
+
+app.get('/profile', async (req, res) => {
+    if (!req.query.token) {
+        return res.redirect('/users/login');
+    }
+    const user = await Users.find({ _id: req.query.token });
+    if (!user) {
+        return res.redirect('/users/login');
+    }
+    return user;
 });
 
 export default app;
