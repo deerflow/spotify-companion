@@ -63,11 +63,13 @@ app.get('/data/profile', async (req, res) => {
     if (!req.query.token) {
         return res.status(400).json({ error: 'No token provided' });
     }
-    const user = await Users.find({ _id: req.query.token });
+    const user = await Users.findOne({ _id: req.query.token });
     if (!user) {
         return res.status(400).json({ error: 'Invalid token' });
     }
-    return user;
+
+    const { accessToken, refreshToken, code, ...userWithoutTokens } = user;
+    return userWithoutTokens;
 });
 
 app.delete('/stop', async (req, res) => {
