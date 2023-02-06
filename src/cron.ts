@@ -44,7 +44,7 @@ const cron = async () => {
                         console.log(`Refreshing ${client.email}`);
                         await client.authenticate(true);
                         client.refreshAxiosInstance();
-                        await client.updateUserInDb();
+                        await client.upsertUser();
                         console.log('Finished refreshing');
                         return client;
                     }

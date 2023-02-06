@@ -63,8 +63,8 @@ const Profile: FC = () => {
 };
 
 const languageToFlagCode = {
-    'en-US': 'gb',
-    'fr-FR': 'fr',
+    english: 'gb',
+    french: 'fr',
 };
 
 type TProfile = Omit<User, 'accessToken' | 'refreshToken' | 'code'>;

@@ -1,9 +1,9 @@
 import express from 'express';
 import queryString from 'node:querystring';
 import SpotifyWebClient from './modules/SpotifyWebClient';
-import { MongoClient } from 'mongodb';
 import path from 'path';
 import { Users } from './modules/DB';
+import User from './types/models/User';
 
 const app = express();
 const SCOPE = 'playlist-read-private playlist-modify-private user-read-email user-read-private';
@@ -42,19 +42,14 @@ app.get('/users/login', async (req, res) => {
 app.get('/callback/code', async (req, res) => {
     return console.log(req.query);
     if (req.query.error || !req.query.code) {
-        res.status(403).json({ message: 'Failed to authenticate', error: req.query.error });
+        res.status(403).json({ message: 'failed to authenticate', error: req.query.error });
     }
     const webClient = new SpotifyWebClient({ code: req.query.code as string });
     try {
         await webClient.authenticate();
         await webClient.getCurrentUserProfile();
-        const dbClient = new MongoClient(
-            process.env.NODE_ENV === 'production' ? (process.env.DB_PROD as string) : (process.env.DB_DEV as string)
-        );
-        res.redirect(`/token/save?token=${req.query.token}&redirect_uri=/profile`);
-        await dbClient.connect();
-        await webClient.updateUserInDb(dbClient);
-        await dbClient.close();
+        const _id = await webClient.upsertUser();
+        res.redirect(`/token/save?token=${_id}&redirect_uri=/profile`);
     } catch (e) {
         res.redirect('/error/login');
     }
@@ -62,24 +57,40 @@ app.get('/callback/code', async (req, res) => {
 
 app.get('/data/profile', async (req, res) => {
     if (!req.query.token) {
-        return res.status(400).json({ error: 'No token provided' });
+        return res.status(400).json({ error: 'no token provided' });
     }
     const user = await Users.findOne({ _id: req.query.token });
     if (!user) {
-        return res.status(400).json({ error: 'Invalid token' });
+        return res.status(400).json({ error: 'invalid token' });
     }
 
     const { accessToken, refreshToken, code, ...userWithoutTokens } = user;
     return userWithoutTokens;
 });
 
+app.patch('/data/profile', async (req, res) => {
+    if (!req.body.token) {
+        return res.status(400).json({ error: 'missing token' });
+    }
+    const { language, removeDuplicatesInRewindPlaylists }: User = req.body;
+    if (!language || !removeDuplicatesInRewindPlaylists) {
+        return res.status(400).json({ error: 'missing fields to update' });
+    }
+    const webClient = new SpotifyWebClient({ id: req.body.token, language, removeDuplicatesInRewindPlaylists });
+    try {
+        await webClient.upsertUser();
+    } catch (e) {
+        return res.status(400).json({ error: 'could not update user in database' });
+    }
+});
+
 app.delete('/stop', async (req, res) => {
     if (!req.query.token) {
-        return res.status(400).json({ error: 'No token provided' });
+        return res.status(400).json({ error: 'missing token' });
     }
     const { deletedCount } = await Users.deleteOne({ _id: req.query.token });
     if (!deletedCount) {
-        return res.status(400).json({ error: 'Invalid token' });
+        return res.status(400).json({ error: 'invalid token' });
     }
     return res.status(200).json({ msg: 'Account deleted' });
 });

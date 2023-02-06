@@ -6,7 +6,7 @@ interface User {
     refreshToken?: string;
     accessToken?: string;
     removeDuplicatesInRewindPlaylists: boolean;
-    language: 'en-US' | 'fr-FR';
+    language: 'english' | 'french';
 }
 
 export default User;

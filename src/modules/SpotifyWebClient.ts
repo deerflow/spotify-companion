@@ -1,24 +1,24 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
-import { mongoClient } from './DB';
+import { Users } from './DB';
 import { GetCurrentUserPlaylist, Playlist } from '../types/requests/GetCurrentUserPlaylist';
 import { GetPlaylist } from '../types/requests/GetPlaylist';
 import { CreatePlaylist } from '../types/requests/CreatePlaylist';
 import { GetPlaylistItems } from '../types/requests/GetPlaylistItems';
-import User from '../types/models/User';
 import SpotifyApi from './SpotifyApi';
+import User from '../types/models/User';
 
 class SpotifyWebClient {
-    private readonly _code: string;
+    private readonly _code?: string;
     private _refreshToken?: string;
     private _accessToken?: string;
     private _email?: string;
     private _id?: string;
 
-    private _removeDuplicatesInRewindPlaylists?: boolean;
+    private readonly _removeDuplicatesInRewindPlaylists?: boolean;
 
-    private _language?: 'en-US' | 'fr-FR';
+    private readonly _language?: 'english' | 'french';
 
-    private _spotifyId?: string;
+    private readonly _spotifyId?: string;
     private _axios: AxiosInstance = axios.create();
 
     get code() {
@@ -59,16 +59,16 @@ class SpotifyWebClient {
         spotifyId,
         email,
         removeDuplicatesInRewindPlaylists = true,
-        language = 'en-US',
+        language = 'english',
     }: {
-        code: string;
+        code?: string;
         refreshToken?: string;
         accessToken?: string;
         email?: string;
         id?: string;
         spotifyId?: string;
         removeDuplicatesInRewindPlaylists?: boolean;
-        language?: 'en-US' | 'fr-FR';
+        language?: 'english' | 'french';
     }) {
         this._code = code;
         this._refreshToken = refreshToken;
@@ -93,6 +93,9 @@ class SpotifyWebClient {
     }
 
     async authenticate(removeAccessToken = false) {
+        if (!this.code) {
+            throw new Error('Failed to authenticate (no code)');
+        }
         if (removeAccessToken) {
             this._accessToken = undefined;
         }
@@ -150,10 +153,21 @@ class SpotifyWebClient {
         });
     }
 
-    async updateUserInDb(client = mongoClient) {
-        const { id, email, code, refreshToken, accessToken } = this;
-        const Users = client.db('spotify-companion').collection<User>('User');
-        await Users.updateOne({ _id: id }, { $set: { email, code, refreshToken, accessToken } }, { upsert: true });
+    async upsertUser(
+        profile: Partial<User> = {
+            _id: this.id,
+            email: this.email,
+            code: this.code,
+            accessToken: this.accessToken,
+            refreshToken: this.refreshToken,
+            language: this.language,
+            spotifyId: this.spotifyId,
+            removeDuplicatesInRewindPlaylists: this.removeDuplicatesInRewindPlaylists,
+        }
+    ) {
+        const { _id, ...profileWithoutId } = profile;
+        const { upsertedId } = await Users.updateOne({ _id: _id }, { $set: profileWithoutId }, { upsert: true });
+        return upsertedId;
     }
 
     async getCurrentUserProfile() {
