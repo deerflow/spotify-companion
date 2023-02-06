@@ -1,10 +1,11 @@
 import React, { FC } from 'react';
 import RewindIon from '../assets/RewindIcon';
 import { Link } from 'react-router-dom';
+import PageCenter from '../components/PageCenter';
 
 const Root: FC = () => {
     return (
-        <div className='page-center'>
+        <PageCenter>
             <div className='title-container'>
                 <h1 className='main-title'>Spotify Rewind</h1>
                 <RewindIon />
@@ -15,7 +16,7 @@ const Root: FC = () => {
                     Log in with Spotify
                 </Link>
             </div>
-        </div>
+        </PageCenter>
     );
 };
 
