@@ -1,6 +1,6 @@
 // noinspection ES6MissingAwait
 
-import { mongoClient, Playlists, Users } from './modules/DB';
+import { Playlists, Users } from './modules/DB';
 import SpotifyWebClient from './modules/SpotifyWebClient';
 import { AxiosError } from 'axios';
 import Logger from './modules/Logger';
@@ -24,7 +24,6 @@ const cron = async () => {
                 minute: '2-digit',
             })} : Starting cron job`
         );
-        await mongoClient.connect();
 
         const users = await Users.find({}).toArray();
 
@@ -112,8 +111,6 @@ const cron = async () => {
         }
     } catch (e) {
         handleException(e as unknown as Error);
-    } finally {
-        await mongoClient.close();
     }
 };
 
