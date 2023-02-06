@@ -85,6 +85,11 @@ p {
     align-items: center;
 }
 
+.flag {
+    width: 400px;
+    height: 300px;
+}
+
 @media (prefers-color-scheme: light) {
     :root {
         color: #213547;
