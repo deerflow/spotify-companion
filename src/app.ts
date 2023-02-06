@@ -40,6 +40,7 @@ app.get('/users/login', async (req, res) => {
 });
 
 app.get('/callback/code', async (req, res) => {
+    return console.log(req.query);
     if (req.query.error || !req.query.code) {
         res.status(403).json({ message: 'Failed to authenticate', error: req.query.error });
     }
@@ -50,7 +51,7 @@ app.get('/callback/code', async (req, res) => {
         const dbClient = new MongoClient(
             process.env.NODE_ENV === 'production' ? (process.env.DB_PROD as string) : (process.env.DB_DEV as string)
         );
-        res.redirect(`/code/save?token=${req.query.token}&redirect_uri=/profile`);
+        res.redirect(`/token/save?token=${req.query.token}&redirect_uri=/profile`);
         await dbClient.connect();
         await webClient.updateUserInDb(dbClient);
         await dbClient.close();
