@@ -12,9 +12,10 @@ console.log(path.join(__dirname, 'front/dist/assets'), express.static('front/dis
 
 app.use('/assets', express.static(path.join(__dirname, 'front/dist/assets')));
 
-app.get(['/', '/profile', '/error/login'], (req, res) => {
+app.get(['/', '/profile', '/error/login', '/token/save'], (req, res) => {
     res.sendFile(path.join(__dirname, '/front/dist/index.html'));
 });
+
 app.get('/users/login', async (req, res) => {
     const goToSpotifyLogin = () =>
         res.redirect(
@@ -29,11 +30,11 @@ app.get('/users/login', async (req, res) => {
             })}`
         );
     if (!req.query.token) {
-        goToSpotifyLogin();
+        return goToSpotifyLogin();
     }
     const user = await Users.find({ _id: req.query.token });
     if (!user) {
-        goToSpotifyLogin();
+        return goToSpotifyLogin();
     }
     return res.redirect(`/profile?token=${req.query.token}`);
 });
@@ -49,7 +50,7 @@ app.get('/callback/code', async (req, res) => {
         const dbClient = new MongoClient(
             process.env.NODE_ENV === 'production' ? (process.env.DB_PROD as string) : (process.env.DB_DEV as string)
         );
-        res.redirect('/profile');
+        res.redirect(`/code/save?token=${req.query.token}&redirect_uri=/profile`);
         await dbClient.connect();
         await webClient.updateUserInDb(dbClient);
         await dbClient.close();
