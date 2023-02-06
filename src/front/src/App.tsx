@@ -7,7 +7,7 @@ import Profile from './pages/Profile';
 const router = createBrowserRouter([
     { path: '/', element: <Root /> },
     { path: '/users/login', element: <Login /> },
-    { path: '/error/could-not-login', element: <CouldNotLogin /> },
+    { path: '/error/login', element: <CouldNotLogin /> },
     { path: '/profile', element: <Profile /> },
 ]);
 

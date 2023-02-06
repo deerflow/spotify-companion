@@ -13,7 +13,7 @@ console.log(path.join(__dirname, 'front/dist/assets'), express.static('front/dis
 
 app.use('/assets', express.static(path.join(__dirname, 'front/dist/assets')));
 
-app.get(['/', '/profile'], (req, res) => {
+app.get(['/', '/profile', '/error/login'], (req, res) => {
     res.sendFile(path.join(__dirname, '/front/dist/index.html'));
 });
 app.get('/users/login', (req, res) => {
