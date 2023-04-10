@@ -8,8 +8,6 @@ import User from './types/models/User';
 const app = express();
 const SCOPE = 'playlist-read-private playlist-modify-private user-read-email user-read-private';
 
-console.log(path.join(__dirname, 'front/dist/assets'), express.static('front/dist/assets'));
-
 app.use('/assets', express.static(path.join(__dirname, 'front/dist/assets')));
 
 app.get(['/', '/profile', '/error/login', '/token/save'], (req, res) => {
@@ -40,7 +38,7 @@ app.get('/users/login', async (req, res) => {
 });
 
 app.get('/callback/code', async (req, res) => {
-    return console.log(req.query);
+    console.log(req.query);
     if (req.query.error || !req.query.code) {
         res.status(403).json({ message: 'failed to authenticate', error: req.query.error });
     }
@@ -68,7 +66,7 @@ app.get('/data/profile', async (req, res) => {
     return userWithoutTokens;
 });
 
-app.patch('/data/profile', async (req, res) => {
+app.patch('/profile', async (req, res) => {
     if (!req.body.token) {
         return res.status(400).json({ error: 'missing token' });
     }
@@ -84,7 +82,7 @@ app.patch('/data/profile', async (req, res) => {
     }
 });
 
-app.delete('/stop', async (req, res) => {
+app.delete('/profile', async (req, res) => {
     if (!req.query.token) {
         return res.status(400).json({ error: 'missing token' });
     }

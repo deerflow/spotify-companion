@@ -16,7 +16,7 @@ class SpotifyWebClient {
 
     private readonly _removeDuplicatesInRewindPlaylists?: boolean;
 
-    private readonly _language?: 'english' | 'french';
+    private readonly _language?: User['language'];
 
     private readonly _spotifyId?: string;
     private _axios: AxiosInstance = axios.create();
@@ -68,7 +68,7 @@ class SpotifyWebClient {
         id?: string;
         spotifyId?: string;
         removeDuplicatesInRewindPlaylists?: boolean;
-        language?: 'english' | 'french';
+        language?: User['language'];
     }) {
         this._code = code;
         this._refreshToken = refreshToken;

@@ -6,12 +6,14 @@ const SaveToken: FC = () => {
     const navigate = useNavigate();
     const { token, redirect_uri: redirectUri } = useParams();
 
+    console.log({ token, redirectUri });
+
     useEffect(() => {
         if (token) {
             localStorage.setItem('token', token);
             return navigate('/profile');
         }
-        return navigate('/error/login');
+        //return navigate('/error/login');
     });
     return <Loading />;
 };

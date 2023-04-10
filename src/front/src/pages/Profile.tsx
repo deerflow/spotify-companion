@@ -1,4 +1,4 @@
-import React, { FC, useContext, useEffect, useState } from 'react';
+import React, { FC, useCallback, useContext, useEffect, useState } from 'react';
 import Request from '../modules/Request';
 import { StoreContext } from '../components/StoreProvider';
 import User from '../../../types/models/User';
@@ -26,19 +26,20 @@ const Profile: FC = () => {
         })();
     }, []);
 
+    const onFlagPress = useCallback(
+        (language: TProfile['language']) => {
+            profile && setProfile({ ...profile, language });
+        },
+        [profile]
+    );
+
     return profile ? (
         <>
             <h1>Spotify Companion</h1>
             <p>Connected as ${profile?.email}</p>
             <div>
-                <FlagButton
-                    language='gb'
-                    value={profile?.language ? languageToFlagCode[profile.language] : 'english'}
-                />
-                <FlagButton
-                    language='fr'
-                    value={profile?.language ? languageToFlagCode[profile.language] : 'english'}
-                />
+                <FlagButton language='english' value={languageToFlagCode[profile.language]} onFlagPress={onFlagPress} />
+                <FlagButton language='french' value={languageToFlagCode[profile.language]} onFlagPress={onFlagPress} />
                 <div>
                     <span>Remove duplicate tracks in temporal playlist</span>
                     <Switch
@@ -49,7 +50,7 @@ const Profile: FC = () => {
                                 removeDuplicatesInRewindPlaylists: !profile.removeDuplicatesInRewindPlaylists,
                             })
                         }
-                        checked={!!profile?.removeDuplicatesInRewindPlaylists}
+                        checked={profile.removeDuplicatesInRewindPlaylists}
                         checkedIcon={false}
                         uncheckedIcon={false}
                     />
@@ -67,6 +68,6 @@ const languageToFlagCode = {
     french: 'fr',
 };
 
-type TProfile = Omit<User, 'accessToken' | 'refreshToken' | 'code'>;
+type TProfile = Omit<User, '_id' | 'accessToken' | 'refreshToken' | 'code'>;
 
 export default Profile;
